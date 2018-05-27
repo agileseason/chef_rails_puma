@@ -22,7 +22,7 @@ systemd_unit "#{app.service(:puma)}.service" do
     After=syslog.target network.target
 
     [Service]
-    Type=forking
+    Type=simple
     PIDFile=#{app.dir(:shared)}/tmp/pids/puma.pid
     SyslogIdentifier=#{app.service(:puma)}.service
     User=#{app.user}
