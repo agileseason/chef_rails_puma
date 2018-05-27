@@ -18,7 +18,7 @@ CMD
 systemd_unit "#{app.service(:puma)}.service" do
   content <<~SERVICE
     [Unit]
-    Description=Unicorn for #{app.name} #{app.env}
+    Description=Puma for #{app.name} #{app.env}
     After=syslog.target network.target
 
     [Service]
@@ -31,8 +31,8 @@ systemd_unit "#{app.service(:puma)}.service" do
     WorkingDirectory=#{app.dir(:root)}
     Restart=on-failure
 
-    ExecStart=/bin/bash -c '#{bundle_exec} puma -D -E #{app.env} -c #{app.dir(:root)}/config/puma/#{app.env}.rb'
-    ExecReload=/bin/kill -s USR2 $MAINPID
+    ExecStart=/bin/bash -c '#{bundle_exec} puma -e #{app.env} -C #{app.dir(:root)}/config/puma/#{app.env}.rb'
+    ExecReload=/bin/kill -s USR1 $MAINPID
     ExecStop=/bin/kill -s QUIT $MAINPID
 
     StandardOutput=journal
