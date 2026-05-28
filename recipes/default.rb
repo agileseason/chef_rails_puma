@@ -15,6 +15,13 @@ bundle_exec = <<~CMD.gsub(/\n|  +/, ' ')
     bundle exec
 CMD
 
+env = node['chef_rails_puma']['env']
+  &.split("\n")
+  &.map(&:strip)
+  &.select { |line| line != '' }
+  &.map { |line| "Environment=#{line}" }
+  &.join("\n")
+
 systemd_unit "#{app.service(:puma)}.service" do
   content <<~SERVICE
     [Unit]
@@ -30,6 +37,8 @@ systemd_unit "#{app.service(:puma)}.service" do
     UMask=0002
     WorkingDirectory=#{app.dir(:root)}
     Restart=on-failure
+    LimitNOFILE=49152
+    #{env}
 
     ExecStart=/bin/bash -c '#{bundle_exec} puma -e #{app.env} -C #{app.dir(:root)}/config/puma/#{app.env}.rb'
     ExecReload=/bin/kill -s USR1 $MAINPID
@@ -45,7 +54,7 @@ systemd_unit "#{app.service(:puma)}.service" do
   triggers_reload true
   verify false
 
-  if ::File.exists?("#{app.dir(:root)}/Gemfile")
+  if ::File.exist?("#{app.dir(:root)}/Gemfile")
     action %i[create enable start]
   else
     action %i[create enable]
